@@ -1,8 +1,10 @@
-FROM python:3.12-slim
+FROM node:22-alpine AS build
 WORKDIR /app
-COPY backend/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-COPY backend /app/backend
-COPY datasets /app/datasets
-CMD ["uvicorn","backend.main:app","--host","0.0.0.0","--port","8000"]
+COPY package*.json ./
+RUN npm install --no-audit --no-fund
+COPY . .
+RUN npm run build
+FROM nginx:1.28-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 
